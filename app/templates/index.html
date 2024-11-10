@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+
+<style>
+    table *{
+        font-size: 12px;
+    }
+
+    .bg_0{
+        background-color: #448858;
+        color: white;
+    }
+    .bg_1{
+        background-color: #9cb431;
+        color: white;
+    }
+    .bg_2{
+        background-color: #ce2121;
+        color: white;
+    }
+    .bg_3{
+        background-color: #f0a500;
+        color: white;
+    }
+
+    .payment_0{
+        background-color: #448858;
+        color: white;
+    }
+    .payment_1{
+        background-color: #9cb431;
+        color: white;
+    }
+    .payment_2{
+        background-color: #ce2121;
+        color: white;
+    }
+    .payment_3{
+        background-color: #f0a500;
+        color: white;
+    }
+    .payment_4{
+        background-color: #1e90ff;
+        color: white;
+    }
+
+</style>
+
+    <div class="container-fluid">
+        <h1>Welcome to SellerEaser</h1>
+
+        <hr>
+        <div class="row mb-3">
+            <h3>Vendas Mensais</h3>
+            <div style="height: 350px;">
+                <canvas id="selling_for_month"></canvas>
+            </div>
+        </div>
+        <hr>
+        <div class="row mb-3">
+            <div class="col">
+                <h3>Vendas Diárias</h3>
+                <div style="height: 250px;">
+                    <canvas id="selling_current_month"></canvas>
+                </div>
+            </div>
+
+            <div class="col">
+                <h3>Vendas do Dia</h3>
+                <div style="height: 250px;">
+                    <canvas id="last_24_hours"></canvas>
+                </div>
+            </div>
+
+        </div>
+        <hr>
+        <div class="row mb-3">
+            <div class="col">
+                <h3>Últimas Vendas</h3>
+                <table class="table cell-bordered" id="last_sells">
+                    <thead>
+                        <tr>
+                            <th>#ID</th>
+                            <th>Valor da Venda ( R$ )</th>
+                            <th>Lucro Obtido ( R$ )</th>
+                            <th>Tipo de Pagamento</th>
+                            <th>Data da Venda</th>
+                            <th>Nome do Vendedor</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody_products">
+                        {% for item in carts %}
+                            <tr>
+                                <td>{{ item.id }}</td>
+                                <td>R${{ item.total }}</td>
+                                <td>R${{ item.profit }}</td>
+                                <td><span class="badge payment_{{item.payment_method.payment}}">{{ item.payment_method.payment_str }}</span></td>
+                                <td>{{ item.created_date | date:"d/m/Y H:i:s" }}</td>
+                                <td>{{ item.created_by_name }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-3">
+                <h3>Atividades</h3>
+                <table id="table_historic" class="table table-hover table-bordered">
+                    <thead>
+                        <tr>
+                            <th>#ID</th>
+                            <th>Atividades Recentes</th>
+                            <th>Ação</th>
+                            <th>Data</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in historic %}
+                            <tr>
+                                <td>{{ item.id }}</td>
+                                <td>{{ item.title }}</td>
+                                <td><span class="badge bg_{{item.activity}}">{{ item.activity_str }}</span></td>
+                                <td>{{ item.created_date | date:"d/m/Y H:i:s" }}</td>
+                            </tr>
+                        {% endfor %}
+
+                    </tbody>
+                </table>
+            </div>
+        </div>  
+    </div>
+    
+
+{% endblock %}
+
+
+{% block scripts %}
+    <script>
+
+        class Index{
+            constructor(){
+                console.log('Index class');
+                this.cart_list = null;
+            }
+
+            async CartList(){
+                this.cart_list = await getCartList();
+            }
+
+            async init(){
+                await this.CartList();
+                this.chartSellingForMonth();
+            }
+
+            chartSellingForMonth(){
+                const data = this.cart_list;
+                let current_month = new Date().getMonth() + 1;
+                let current_day = new Date().getDate();
+                let current_year = new Date().getFullYear();
+
+                let selling_for_month = {};
+                let profit_for_month = {};
+                let selling_current_month = {};
+                let profit_current_month = {};
+                let last_24_hours = {};
+                let last_24_hour_profit = {};
+                let labels = [];
+                let values = [];
+                let values2 = [];
+
+                data.forEach(item => {
+                    // Transformando created_date em Date para pegar o mês ( mês/ano )
+                    let date = new Date(item.created_date);
+                    let hour = date.getHours();
+                    let day = date.getDate();
+                    let month = date.getMonth() + 1;
+                    let year = date.getFullYear();
+                    let date_str = `${month}/${year}`;
+                    let date_days = `${day}/${month}/${year}`;
+
+                    if (day == current_day && month == current_month && year == current_year){
+                        if (last_24_hours[hour]){
+                            last_24_hours[hour] += item.total;
+                            last_24_hour_profit[hour] += item.profit;
+                        }else{
+                            last_24_hours[hour] = item.total;
+                            last_24_hour_profit[hour] = item.profit;
+                        }
+                    }
+
+                    if (selling_for_month[date_str]){
+                        selling_for_month[date_str] += item.total;
+                        profit_for_month[date_str] += item.profit;
+
+                    }else{
+                        selling_for_month[date_str] = item.total;
+                        profit_for_month[date_str] = item.profit;
+                    } 
+
+                    if (month == current_month){
+                        if (selling_current_month[date_days]){
+                            selling_current_month[date_days] += item.total;
+                            profit_current_month[date_days] += item.profit;
+                        }else{
+                            selling_current_month[date_days] = item.total;
+                            profit_current_month[date_days] = item.profit;
+                        }
+                    }
+                });
+
+                for (let key in selling_for_month){
+                    labels.push(key);
+                    values.push(selling_for_month[key]);
+                    values2.push(profit_for_month[key]);
+                }
+                doubleBarChart('selling_for_month', ['Vendas por Mês', 'Lucro por Mês'], labels, values, values2, 'bar');
+
+                labels = [];
+                values = [];
+                values2 = [];
+                for (let key in selling_current_month){
+                    labels.push(key);
+                    values.push(selling_current_month[key]);
+                    values2.push(profit_current_month[key]);
+                }
+                doubleBarChart('selling_current_month', ['Vendas', 'Lucro'], labels, values, values2, 'line');
+
+                labels = [];
+                values = [];
+                values2 = [];
+                for (let key in last_24_hours){
+                    labels.push(key + ':00');
+                    values.push(last_24_hours[key]);
+                    values2.push(last_24_hour_profit[key]);
+                }
+                doubleBarChart('last_24_hours', ['Vendas', 'Lucro'], labels, values, values2, 'line');
+            }
+        }
+
+
+
+
+        $(document).ready(function(){
+            const linkColor = document.querySelectorAll('.nav_link');
+            linkColor[0].classList.add('active');
+            let index = new Index();
+            index.init();
+            $('#last_sells').DataTable(
+                {
+                    "order": [[ 0, "desc" ]],
+                    "pageLength": 5,
+
+                }
+            );
+
+            $('#table_historic').DataTable(
+                {
+                    "order": [[ 0, "desc" ]],
+                    "searching": false,
+                    "pageLength": 5,
+                }
+            );
+        });
+    </script>
+{% endblock %}

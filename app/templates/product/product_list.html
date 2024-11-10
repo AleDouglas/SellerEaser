@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+
+<style>
+
+    .table *{
+        font-size: 12px;
+    }
+
+</style>
+
+
+<div class="container-fluid">
+
+
+    <div class="row mb-3">
+
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Produtos Cadastrados</h5>
+                    <p class="card-text">Total de produtos cadastrados: {{ object_list|length }}</p>
+                </div>
+            </div>
+        </div>
+    
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Produtos em Estoque</h5>
+                    <p class="card-text">Total de produtos em estoque: <span id="length_product_stock"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <h3>Estoque de Produtos</h3>
+        <div style="height: 300px;">
+            <canvas id="stock_chart"></canvas>
+        </div>
+    </div>
+
+
+
+    <div class="row" style="padding: 20px;border: 1px solid gray;">
+        <div class="mb-3">
+            <a href="{% url 'register_product' %}" type="button" class="btn btn-primary"
+            style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem; --bs-btn-font-size: .75rem;">Cadastrar Novo Produto</a>
+        </div>
+        <table id="table_product_list" class="table cell-border" >
+            <thead>
+                <tr>
+                    <th>#ID</th>
+                    <th>Nome</th>
+                    <th>Código</th>
+                    <th>Preço de Venda</th>
+                    <th>Preço de Custo</th>
+                    <th>Quantidade</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in object_list %}
+                <tr>
+                    <td>{{ product.id }}</td>
+                    <td>{{ product.name }}</td>
+                    <td>{{ product.code }}</td>
+                    <td>{{ product.selling_price }}</td>
+                    <td>{{ product.buying_price }}</td>
+                    <td>{{ product.stock }}</td>
+                    <td>
+                        <a href="{% url 'product_detail' product.id %}" class="btn btn-primary">Detalhes</a>
+                        <a href="{% url 'product_update' product.id %}" class="btn btn-warning">Editar</a>
+                        <a href="{% url 'product_delete' product.id %}" class="btn btn-danger">Excluir</a>
+    
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+
+
+
+
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+
+    class ProductList{
+        constructor(){
+            this.table = $('#table_product_list');
+            this.product_list = null;
+        }
+
+        async init(){
+            this.table.DataTable();
+            this.product_list = await getProductList();
+            this.writeSpans();
+            this.renderStockChart();
+        }
+
+        writeSpans(){
+            let stock = 0;
+            this.product_list.forEach(product => {
+                stock += product.stock;
+            });
+            $('#length_product_stock').text(stock);
+        }
+
+        renderStockChart(){
+            let labels = [];
+            let data = [];
+            // Ordenar a lista de produtos por estoque ( do maior para o menor )
+            this.product_list.sort((a, b) => {
+                return b.stock - a.stock;
+            });
+
+            this.product_list.forEach(product => {
+                labels.push(product.name);
+                data.push(product.stock);
+            });
+            singleBarChart('stock_chart', 'Estoque de Produtos', labels, data);
+        }
+    }
+
+
+
+    $(document).ready(function(){
+        const productList = new ProductList();
+        productList.init();
+        const linkColor = document.querySelectorAll('.nav_link');
+        linkColor[1].classList.add('active');
+    });
+
+
+
+</script>
+{% endblock %}
