@@ -299,16 +299,19 @@ class CartViewSet(ViewSetCustom):
     def get_serializer_class(self):
         return CartSerializer
     
-    def create_order(self, items_dict, discount_rate):
+    def create_order(self, items_dict, discount_rate, taxa):
         orders = []
         total_value = 0
         total_profit = 0
         discount_rate = float(discount_rate) / 100
+        taxa = float(taxa) / 100
         
         for item in items_dict:
             product = Product.objects.get(id=item['id'])
             subtotal = float(product.selling_price) * int(item['quantity'])
             discounted_total = subtotal - (subtotal * float(discount_rate))
+            discounted_total += discounted_total * taxa
+            
             cost = float(product.buying_price) * int(item['quantity'])
             profit_after_discount = discounted_total - cost
             
@@ -336,7 +339,8 @@ class CartViewSet(ViewSetCustom):
         payment = PaymentMethod(
             payment = payment_dict['method'],
             parcel = payment_dict['parcels'],
-            discount = payment_dict['discount']
+            discount = payment_dict['discount'],
+            taxa = payment_dict['taxa']
         )
         payment.save()
         return payment
@@ -345,18 +349,24 @@ class CartViewSet(ViewSetCustom):
     def finish_cart(self, request):
         with transaction.atomic():
             payment_method = self.create_paymentMethod(request.data['payment'])
-            orders, total_value, total_profit = self.create_order(request.data['items'], payment_method.discount)
+            orders, total_value, total_profit = self.create_order(request.data['items'], payment_method.discount, payment_method.taxa)
             
             if not orders:
                 return Response({'error': 'Estoque insuficiente'}, status=status.HTTP_400_BAD_REQUEST)
             
+            customer_name = 'Visitante'
+            customer_id = 0
+            if int(request.data['cliente_id']) != 0:
+                cliente = Cliente.objects.get(id=request.data['cliente_id'])
+                customer_name = cliente.name
+                customer_id = cliente.id
             
             cart = Cart(
                 payment_method = payment_method,
                 total = total_value,
                 profit = total_profit,
-                customer_name = request.data['customer_name'],
-                customer_id = request.data['customer_id'],
+                customer_name = customer_name,
+                customer_id = customer_id,
                 created_by_name = 'Admin'
             )
 

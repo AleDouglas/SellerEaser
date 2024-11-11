@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+
+<style>
+
+    .table *{
+        font-size: 12px;
+    }
+
+</style>
+
+
+<div class="container-fluid">
+
+
+
+    <div class="row" style="padding: 20px;border: 1px solid gray;">
+        <div class="mb-3">
+            <a href="{% url 'register_client' %}" type="button" class="btn btn-primary"
+            style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem; --bs-btn-font-size: .75rem;">Cadastrar Novo Cliente</a>
+        </div>
+        <table id="table_product_list" class="table cell-border" >
+            <thead>
+                <tr>
+                    <th>#ID</th>
+                    <th>Nome</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in object_list %}
+                <tr>
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.name }}</td>
+                    <td>
+                        <a href="{% url 'client_detail' item.id %}" class="btn btn-primary">Detalhes</a>
+                        <a href="{% url 'client_update' item.id %}" class="btn btn-warning">Editar</a>
+                        <a href="{% url 'client_delete' item.id %}" class="btn btn-danger">Excluir</a>
+                    </td>
+                </tr>
+                {% endfor %}
+
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+
+
+
+
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+
+
+    $(document).ready(function(){
+        const linkColor = document.querySelectorAll('.nav_link');
+        linkColor[3].classList.add('active');
+    });
+
+
+
+</script>
+{% endblock %}

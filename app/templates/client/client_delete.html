@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+
+
+{% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<div class="container mt-4">
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            {{ form|crispy }}
+            <h1 style="margin-top: 15px;">Deseja realmente excluir o cliente?</h1>
+        </div>
+        <button style="margin-top: 15px;" type="submit" class="btn btn-primary">Salvar</button>
+    </form>
+</div>
+
+
+{% endblock %}

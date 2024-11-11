@@ -89,6 +89,7 @@
                             <th>Tipo de Pagamento</th>
                             <th>Data da Venda</th>
                             <th>Nome do Vendedor</th>
+                            <th>Nome do Cliente</th>
                         </tr>
                     </thead>
                     <tbody id="tbody_products">
@@ -100,6 +101,7 @@
                                 <td><span class="badge payment_{{item.payment_method.payment}}">{{ item.payment_method.payment_str }}</span></td>
                                 <td>{{ item.created_date | date:"d/m/Y H:i:s" }}</td>
                                 <td>{{ item.created_by_name }}</td>
+                                <td>{{ item.customer_name }}</td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -260,6 +262,7 @@
                     "order": [[ 0, "desc" ]],
                     "searching": false,
                     "pageLength": 5,
+                    "lengthChange": false,
                 }
             );
         });

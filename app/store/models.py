@@ -58,6 +58,7 @@ class PaymentMethod(models.Model):
     payment = models.IntegerField(choices=PAYMENT_METHODS)
     parcel = models.IntegerField(default=1)
     discount = models.FloatField(default=0)
+    taxa = models.FloatField(default=0)
     created_date = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):

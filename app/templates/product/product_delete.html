@@ -18,6 +18,7 @@
         {% csrf_token %}
         <div class="form-group">
             {{ form|crispy }}
+            <h1 style="margin-top: 15px;">Deseja realmente excluir o produto?</h1>
         </div>
         <button style="margin-top: 15px;" type="submit" class="btn btn-primary">Salvar</button>
     </form>

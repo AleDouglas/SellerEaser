@@ -90,6 +90,12 @@
                     <input type="number" class="form-control" id="desconto" name="desconto" value="0">
                     <p class="text-muted">Digite o valor do desconto em % ( Porcentagem )</p>
                 </div>
+
+                <div class="mb-2">
+                    <label for="taxa" class="form-label">Taxa ( % )</label>
+                    <input type="number" class="form-control" id="taxa" name="taxa" value="0">
+                </div>
+
                 <div class="mb-2">
                     <label for="total_final" class="form-label">Total Final ( R$ )</label>
                     <input type="text" class="form-control" id="total_final" name="total_final" value="0" disabled>
@@ -255,15 +261,34 @@
                 let parcelas = document.getElementById('parcelas').value;
                 let parcel_value = total_final_desconto / parcelas;
                 document.getElementById('parcel_value').value = parcel_value.toFixed(2);
+                let taxa = document.getElementById('taxa').value;
+                let total_final_taxa = total_final_desconto + (total_final_desconto * (taxa / 100));
+                document.getElementById('total_final').value = total_final_taxa.toFixed(2);
             });
             let parcelas = document.getElementById('parcelas');
             parcelas.addEventListener('change', () => {
                 let discount = document.getElementById('desconto').value;
+                let taxa = document.getElementById('taxa').value;
                 let total_final = this.total_final;
                 let parcelas_value = parcelas.value;
                 let total_final_desconto = total_final - (total_final * (discount / 100));
-                let parcel_value = total_final_desconto / parcelas_value;
+                let total_final_taxa = total_final_desconto + (total_final_desconto * (taxa / 100));
+                let parcel_value = total_final_taxa / parcelas_value;
                 document.getElementById('parcel_value').value = parcel_value.toFixed(2);
+            });
+            let taxa = document.getElementById('taxa');
+
+            taxa.addEventListener('change', () => {
+                let total_final = this.total_final;
+                let taxa_value = taxa.value;
+                let total_final_taxa = total_final + (total_final * (taxa_value / 100));
+                document.getElementById('total_final').value = total_final_taxa.toFixed(2);
+                let parcelas = document.getElementById('parcelas').value;
+                let parcel_value = total_final_taxa / parcelas;
+                document.getElementById('parcel_value').value = parcel_value.toFixed(2);
+                let desconto = document.getElementById('desconto').value;
+                let total_final_desconto = total_final_taxa - (total_final_taxa * (desconto / 100));
+                document.getElementById('total_final').value = total_final_desconto.toFixed(2);
             });
         }
 
@@ -272,23 +297,22 @@
             document.getElementById('qtd_produto').value = 1;
             // Parcela e desconto para o valor padrão
             document.getElementById('desconto').value = 0;
+            document.getElementById('taxa').value = 0;
             document.getElementById('parcelas').value = 1;
         }
     
         async finish_buy(){
             const cliente = document.getElementById('cliente').value;
-            let customer_name = 'Compra Avulsa';
-            let customer_id = 0;
 
             const form = {
                 payment: {
                     method: document.getElementById('metodo_pagamento').value,
                     discount: document.getElementById('desconto').value,
+                    taxa: document.getElementById('taxa').value,
                     parcels: document.getElementById('parcelas').value,
                 },
                 items: this.cart,
-                customer_name: customer_name,
-                customer_id: customer_id,
+                cliente_id: cliente,
             };
             const data = await finishCart(form);
             if ( data == null ){
