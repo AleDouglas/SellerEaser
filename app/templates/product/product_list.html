@@ -36,6 +36,17 @@
     </div>
 
     <div class="row mb-3">
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Valor total dos produtos</h5>
+                    <p class="card-text">R$ <span id="total_value_product"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
         <h3>Estoque de Produtos</h3>
         <div style="height: 300px;">
             <canvas id="stock_chart"></canvas>
@@ -110,10 +121,13 @@
 
         writeSpans(){
             let stock = 0;
+            let prices = 0;
             this.product_list.forEach(product => {
                 stock += product.stock;
+                prices += (product.selling_price * product.stock);
             });
             $('#length_product_stock').text(stock);
+            $('#total_value_product').text(prices);
         }
 
         renderStockChart(){
